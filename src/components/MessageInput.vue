@@ -1,10 +1,43 @@
 <template>
     <div class="message-input">
-        <input type="text" placeholder="Type a message" />
-        <button>Send</button>
+        <input type="text" placeholder="Type a message" v-model="content" />
+        <button @click="sendMessage">Send</button>
     </div>
 </template>
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { messageStore } from "../store/message";
+import { useSocketStore } from "../store/socket";
+import { ref, onMounted } from "vue";
+let content = ref();
+let userSocket = useSocketStore();
+let message = messageStore();
+
+function sendMessage() {
+    if (content.value.trim() !== "") {
+        userSocket.useSocketEmit(
+            "sendMessage",
+            {
+                content: content.value,
+                receiver: message.receiver,
+                sender: message.id,
+            },
+            (data: any) => {
+                message.messages.push(data);
+            }
+        );
+
+        content.value = "";
+    }
+}
+
+onMounted(() => {
+    userSocket.useSocketOn("newMessage", (data: any) => {
+        console.log("on", data);
+
+        message.messages.push(data);
+    });
+});
+</script>
 <style scoped>
 .message-input {
     display: flex;

@@ -30,7 +30,7 @@ export const useSocketStore = defineStore('socket', () => {
                     callback(response);
                 }
             });
-            handleErrors();
+            // handleErrors();
         } else {
             console.error('Socket is not connected');
         }
@@ -45,9 +45,20 @@ export const useSocketStore = defineStore('socket', () => {
         )
     }
 
+    function useSocketOn(event: string, callback: any) {
+        if (socket) {
+            socket.on(event, (response: any) => {
+                callback(response);
+            });
+        } else {
+            console.error('Socket is not connected');
+        }
+    }
+
 
     return {
         useSocketEmit,
-        handleErrors
+        handleErrors,
+        useSocketOn
     }
 })

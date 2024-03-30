@@ -4,7 +4,7 @@
     </div>
     <div class="user-list">
         <ul class="user-list-group">
-            <li v-for="user in userLists" :key="user._id">
+            <li v-for="user in userLists" :key="user._id" @click="getReceiverId(user._id)">
                 <div class="head">
                     <span class="image-box"></span>
                     <span>{{ user.username }}</span>
@@ -19,11 +19,22 @@
 </template>
 <script lang="ts" setup>
 import SearchInput from "./SearchInput.vue";
-import { onBeforeMount, ref } from "vue";
+import { onBeforeMount, onMounted, ref } from "vue";
 // import router from "../router/router";
 import { useSocketStore } from "../store/socket";
+import { messageStore } from "../store/message";
+
+let messages = messageStore();
 
 let useSocket = useSocketStore();
+
+function getReceiverId(receiverId: string) {
+    messages.receiver = receiverId;
+    useSocket.useSocketEmit("getMessages", { receiver: receiverId, sender: messages.id }, (data: any) => {
+        console.log(data);
+        messages.messages = data;
+    });
+}
 
 interface User {
     _id: string;
@@ -32,6 +43,29 @@ interface User {
 }
 let userLists = ref<User[]>([]);
 
+onMounted(() => {
+    useSocket.useSocketOn("userDisconnected", (data: any) => {
+        console.log(data);
+
+        userLists.value = userLists.value.map((user) => {
+            if (user._id == data) {
+                user.status = false;
+            }
+            return user;
+        });
+    });
+
+    useSocket.useSocketOn("userConnected", (data: any) => {
+        console.log(data);
+
+        userLists.value = userLists.value.map((user) => {
+            if (user._id == data) {
+                user.status = true;
+            }
+            return user;
+        });
+    });
+});
 onBeforeMount(() => {
     useSocket.useSocketEmit("getUserFriends", {}, (data: any) => {
         userLists.value = data.friends as User[];
