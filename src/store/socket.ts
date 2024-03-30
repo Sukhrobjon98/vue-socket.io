@@ -9,7 +9,7 @@ export const useSocketStore = defineStore('socket', () => {
 
 
 
-    let socket = io('http://localhost:4000', {
+    let socket = io('http://0.tcp.in.ngrok.io:13126', {
         extraHeaders: {
             Authorization: 'Bearer ' + localStorage.getItem('token')
         }
